@@ -13,7 +13,7 @@ updates:
       - "dependencies"
       - "rust"
     reviewers:
-      - "zach19"
+      - "amadeus19"
 
     # 安全更新分组：将所有安全漏洞修复合并到一个 PR
     groups:

@@ -1,5 +1,5 @@
 {
-  "name": "@zach19/cc-statusline",
+  "name": "@amadeus19/cc-statusline",
   "version": "3.2.0",
   "description": "Claude Code Statusline Pro - Rust-powered statusline",
   "license": "MIT",
@@ -26,22 +26,22 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kzj1867-spec/cc-statusline.git"
+    "url": "git+https://github.com/kzj1867-spec/cc-statusline.git"
   },
   "bugs": {
     "url": "https://github.com/kzj1867-spec/cc-statusline/issues"
   },
   "homepage": "https://github.com/kzj1867-spec/cc-statusline",
-  "author": "zach19",
+  "author": "amadeus19",
   "engines": {
     "node": ">=16"
   },
   "optionalDependencies": {
-    "@zach19/cc-statusline-macos-arm64": "^3.0.0",
-    "@zach19/cc-statusline-macos-x64": "^3.0.0",
-    "@zach19/cc-statusline-linux-x64": "^3.0.0",
-    "@zach19/cc-statusline-linux-arm64": "^3.0.0",
-    "@zach19/cc-statusline-windows-x64": "^3.0.0",
-    "@zach19/cc-statusline-windows-arm64": "^3.0.0"
+    "@amadeus19/cc-statusline-macos-arm64": "^3.0.0",
+    "@amadeus19/cc-statusline-macos-x64": "^3.0.0",
+    "@amadeus19/cc-statusline-linux-x64": "^3.0.0",
+    "@amadeus19/cc-statusline-linux-arm64": "^3.0.0",
+    "@amadeus19/cc-statusline-windows-x64": "^3.0.0",
+    "@amadeus19/cc-statusline-windows-arm64": "^3.0.0"
   }
 }

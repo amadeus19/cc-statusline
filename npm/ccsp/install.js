@@ -4,12 +4,12 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 const PLATFORM_PACKAGES = {
-  "darwin-arm64": "@zach19/cc-statusline-macos-arm64",
-  "darwin-x64": "@zach19/cc-statusline-macos-x64",
-  "linux-arm64": "@zach19/cc-statusline-linux-arm64",
-  "linux-x64": "@zach19/cc-statusline-linux-x64",
-  "win32-arm64": "@zach19/cc-statusline-windows-arm64",
-  "win32-x64": "@zach19/cc-statusline-windows-x64"
+  "darwin-arm64": "@amadeus19/cc-statusline-macos-arm64",
+  "darwin-x64": "@amadeus19/cc-statusline-macos-x64",
+  "linux-arm64": "@amadeus19/cc-statusline-linux-arm64",
+  "linux-x64": "@amadeus19/cc-statusline-linux-x64",
+  "win32-arm64": "@amadeus19/cc-statusline-windows-arm64",
+  "win32-x64": "@amadeus19/cc-statusline-windows-x64"
 };
 
 const targetKey = `${process.platform}-${process.arch}`;

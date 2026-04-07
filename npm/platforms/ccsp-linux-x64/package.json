@@ -1,5 +1,5 @@
 {
-  "name": "@zach19/cc-statusline-linux-x64",
+  "name": "@amadeus19/cc-statusline-linux-x64",
   "version": "3.2.0",
   "description": "ccsp prebuilt binary for Linux x64",
   "license": "MIT",
@@ -22,5 +22,5 @@
     "url": "https://github.com/kzj1867-spec/cc-statusline/issues"
   },
   "homepage": "https://github.com/kzj1867-spec/cc-statusline",
-  "author": "zach19"
+  "author": "amadeus19"
 }

@@ -56,7 +56,7 @@
 
 - **包名变更**: 主包名从 `claude-code-statusline-pro` 改为 `ccsp`
   - 旧命令 `npx claude-code-statusline-pro@latest` 仍可用，但会显示迁移提示
-  - 建议更新为 `npx @zach19/cc-statusline@latest`
+  - 建议更新为 `npx @amadeus19/cc-statusline@latest`
 - **配置文件格式**: 从 JSON 迁移到 TOML 格式
 - **配置文件路径**:
   - 项目级: `~/.claude/projects/{project-hash}/statusline-pro/config.toml`
@@ -120,7 +120,7 @@
    {
      "statusLine": {
        "type": "command",
-       "command": "npx @zach19/cc-statusline@latest"
+       "command": "npx @amadeus19/cc-statusline@latest"
      }
    }
    ```
@@ -128,7 +128,7 @@
 2. **初始化新配置**:
 
    ```bash
-   npx @zach19/cc-statusline@latest config init -w
+   npx @amadeus19/cc-statusline@latest config init -w
    ```
 
 3. **迁移旧配置**:
@@ -137,7 +137,7 @@
 ### 🔗 链接
 
 - [GitHub 仓库](https://github.com/kzj1867-spec/cc-statusline)
-- [NPM 包 (@zach19/cc-statusline)](https://www.npmjs.com/package/@zach19/cc-statusline)
+- [NPM 包 (@amadeus19/cc-statusline)](https://www.npmjs.com/package/@amadeus19/cc-statusline)
 - [NPM 包 (旧名)](https://www.npmjs.com/package/claude-code-statusline-pro)
 - [问题反馈](https://github.com/kzj1867-spec/cc-statusline/issues)
 

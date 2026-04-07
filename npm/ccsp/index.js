@@ -16,7 +16,7 @@ function ensureBinary() {
   }
 
   console.error(
-    "[cc-statusline] Prebuilt binary not found. Try reinstalling with 'npm install --force @zach19/cc-statusline' or compile it manually via 'cargo build --release'."
+    "[cc-statusline] Prebuilt binary not found. Try reinstalling with 'npm install --force @amadeus19/cc-statusline' or compile it manually via 'cargo build --release'."
   );
   process.exitCode = 1;
   return process.exit();

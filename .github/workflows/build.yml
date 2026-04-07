@@ -155,7 +155,7 @@ jobs:
             (cd "${pkg_dir}" && npm pack)
           done
 
-      - name: Pack main package (@zach19/cc-statusline)
+      - name: Pack main package (@amadeus19/cc-statusline)
         run: |
           set -euo pipefail
           # Copy README for npm display
@@ -182,7 +182,7 @@ jobs:
           # Install all packages in one command to let npm handle dependencies correctly
           npm install --prefix "$TMP_DIR" --no-save "$PLATFORM_TARBALL" "$MAIN_TARBALL"
 
-          NODE_PATH="$TMP_DIR/node_modules" node "$TMP_DIR/node_modules/@zach19/cc-statusline/index.js" --version
+          NODE_PATH="$TMP_DIR/node_modules" node "$TMP_DIR/node_modules/@amadeus19/cc-statusline/index.js" --version
 
       - name: Ensure npm versions are unpublished
         env:
@@ -190,13 +190,13 @@ jobs:
         run: |
           set -euo pipefail
           packages=(
-            @zach19/cc-statusline
-            @zach19/cc-statusline-linux-x64
-            @zach19/cc-statusline-linux-arm64
-            @zach19/cc-statusline-macos-x64
-            @zach19/cc-statusline-macos-arm64
-            @zach19/cc-statusline-windows-x64
-            @zach19/cc-statusline-windows-arm64
+            @amadeus19/cc-statusline
+            @amadeus19/cc-statusline-linux-x64
+            @amadeus19/cc-statusline-linux-arm64
+            @amadeus19/cc-statusline-macos-x64
+            @amadeus19/cc-statusline-macos-arm64
+            @amadeus19/cc-statusline-windows-x64
+            @amadeus19/cc-statusline-windows-arm64
           )
           for pkg in "${packages[@]}"; do
             if npm view "${pkg}@${VERSION}" > /dev/null 2>&1; then
