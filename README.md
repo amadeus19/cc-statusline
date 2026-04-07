@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/@amadeus19/cc-statusline.svg)](https://badge.fury.io/js/@amadeus19/cc-statusline)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/kzj1867-spec/cc-statusline)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/amadeus19/cc-statusline)
 
 [中文](#使用指南) | [English](#user-guide)
 

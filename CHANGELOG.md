@@ -136,10 +136,10 @@
 
 ### 🔗 链接
 
-- [GitHub 仓库](https://github.com/kzj1867-spec/cc-statusline)
+- [GitHub 仓库](https://github.com/amadeus19/cc-statusline)
 - [NPM 包 (@amadeus19/cc-statusline)](https://www.npmjs.com/package/@amadeus19/cc-statusline)
 - [NPM 包 (旧名)](https://www.npmjs.com/package/claude-code-statusline-pro)
-- [问题反馈](https://github.com/kzj1867-spec/cc-statusline/issues)
+- [问题反馈](https://github.com/amadeus19/cc-statusline/issues)
 
 ---
 
@@ -175,5 +175,5 @@
 如果你发现任何问题或有新功能建议，请：
 
 1. 查看 [CONTRIBUTING.md](./CONTRIBUTING.md)
-2. 提交 [Issue](https://github.com/kzj1867-spec/cc-statusline/issues)
-3. 提交 [Pull Request](https://github.com/kzj1867-spec/cc-statusline/pulls)
+2. 提交 [Issue](https://github.com/amadeus19/cc-statusline/issues)
+3. 提交 [Pull Request](https://github.com/amadeus19/cc-statusline/pulls)

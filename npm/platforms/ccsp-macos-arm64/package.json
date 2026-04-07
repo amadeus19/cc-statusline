@@ -16,11 +16,11 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kzj1867-spec/cc-statusline.git"
+    "url": "https://github.com/amadeus19/cc-statusline.git"
   },
   "bugs": {
-    "url": "https://github.com/kzj1867-spec/cc-statusline/issues"
+    "url": "https://github.com/amadeus19/cc-statusline/issues"
   },
-  "homepage": "https://github.com/kzj1867-spec/cc-statusline",
+  "homepage": "https://github.com/amadeus19/cc-statusline",
   "author": "amadeus19"
 }
