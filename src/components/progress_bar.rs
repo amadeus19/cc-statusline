@@ -102,6 +102,8 @@ pub struct ProgressBarParams {
     pub gradient_enabled: bool,
     /// Whether the terminal supports colors
     pub supports_colors: bool,
+    /// 系统基线占用的百分比（启用时渲染三段式进度条）
+    pub baseline_percentage: Option<f64>,
 }
 
 /// Build a progress bar string from parameters
@@ -118,27 +120,56 @@ pub fn build_progress_bar(params: &ProgressBarParams) -> Option<String> {
     let filled_len = clamp_round_to_usize((params.percentage / 100.0) * width_f64, width);
     let capped_filled = filled_len.min(width);
 
+    // 计算基线区域长度
+    let baseline_len = params
+        .baseline_percentage
+        .filter(|&b| b > 0.0)
+        .map_or(0, |b| clamp_round_to_usize((b / 100.0) * width_f64, width));
+
     let mut bar = String::with_capacity(width * 16);
     let mut color_active = false;
 
     for idx in 0..width {
         if idx < capped_filled {
-            let gradient_percentage = if capped_filled == 0 {
-                0.0
+            // 确定当前字符类型
+            let (symbol, is_baseline_char) = if baseline_len > 0 && idx < baseline_len {
+                // 基线区域：使用 backup_char（▓）
+                (params.backup_char, true)
             } else {
-                let idx_f64 = to_f64(idx);
-                let capped_filled_f64 = to_f64(capped_filled);
-                ((idx_f64 + 0.5) / capped_filled_f64) * params.percentage
-            }
-            .clamp(0.0, 100.0);
-            let is_backup = gradient_percentage >= params.backup_threshold;
-            let symbol = if is_backup {
-                params.backup_char
-            } else {
-                params.filled_char
+                // 用户内容区域：根据阈值选择字符
+                let gradient_percentage = if capped_filled == 0 {
+                    0.0
+                } else {
+                    let idx_f64 = to_f64(idx);
+                    let capped_filled_f64 = to_f64(capped_filled);
+                    ((idx_f64 + 0.5) / capped_filled_f64) * params.percentage
+                }
+                .clamp(0.0, 100.0);
+                let is_backup = gradient_percentage >= params.backup_threshold;
+                (
+                    if is_backup {
+                        params.backup_char
+                    } else {
+                        params.filled_char
+                    },
+                    false,
+                )
             };
 
             if params.gradient_enabled && params.supports_colors {
+                // 基线区域使用灰色渐变
+                let gradient_percentage = if is_baseline_char {
+                    // 基线区域使用固定的暗色调
+                    let base_p = (to_f64(idx) / width_f64) * 100.0;
+                    (base_p * 0.3).clamp(0.0, 30.0) // 保持暗色
+                } else if capped_filled == 0 {
+                    0.0
+                } else {
+                    let idx_f64 = to_f64(idx);
+                    let capped_filled_f64 = to_f64(capped_filled);
+                    ((idx_f64 + 0.5) / capped_filled_f64) * params.percentage
+                }
+                .clamp(0.0, 100.0);
                 let (r, g, b) = rainbow_gradient_color(gradient_percentage);
                 let _ = write!(bar, "\x1b[38;2;{r};{g};{b}m{symbol}");
                 color_active = true;
@@ -203,6 +234,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         assert!(build_progress_bar(&params).is_none());
     }
@@ -218,6 +250,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         // 50% of 10 = 5 filled, 5 empty
@@ -236,6 +269,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         // At 100% with backup_threshold 85, all cells will be backup chars
@@ -254,6 +288,7 @@ mod tests {
             backup_threshold: 50.0, // Low threshold so high percentages trigger backup
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         // At 100% with threshold 50%, cells above 50% gradient should be backup
@@ -306,6 +341,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: true,
             supports_colors: true,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         // Should contain ANSI escape sequences for true color
@@ -325,6 +361,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         assert_eq!(bar, "-----");
@@ -341,6 +378,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         // 50% of 4 = 2 filled, 2 empty
@@ -358,6 +396,7 @@ mod tests {
             backup_threshold: 85.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         assert_eq!(bar, "#");
@@ -374,6 +413,7 @@ mod tests {
             backup_threshold: 50.0,
             gradient_enabled: false,
             supports_colors: false,
+            baseline_percentage: None,
         };
         let bar = build_progress_bar(&params).unwrap_or_default();
         // All cells should be filled (capped at width)
@@ -395,5 +435,94 @@ mod tests {
         let u64v: u64 = 100;
         assert!((us.into_f64() - 42.0).abs() < f64::EPSILON);
         assert!((u64v.into_f64() - 100.0).abs() < f64::EPSILON);
+    }
+
+    // ===== 三段式进度条测试 =====
+
+    #[test]
+    fn test_three_segment_progress_bar_with_baseline() {
+        // baseline 9%, used 29% => 10 char bar: 1 baseline + 2 user + 7 empty
+        let params = ProgressBarParams {
+            percentage: 29.0,
+            width: 10,
+            filled_char: '█',
+            empty_char: '░',
+            backup_char: '▓',
+            backup_threshold: 85.0,
+            gradient_enabled: false,
+            supports_colors: false,
+            baseline_percentage: Some(9.0),
+        };
+        let bar = build_progress_bar(&params).unwrap_or_default();
+        let baseline_count = bar.chars().filter(|&c| c == '▓').count();
+        let filled_count = bar.chars().filter(|&c| c == '█').count();
+        let empty_count = bar.chars().filter(|&c| c == '░').count();
+        assert_eq!(baseline_count, 1); // 9% of 10 ≈ 1
+        assert_eq!(filled_count, 2); // 29% of 10 ≈ 3 total filled - 1 baseline = 2
+        assert_eq!(empty_count, 7);
+    }
+
+    #[test]
+    fn test_three_segment_progress_bar_no_baseline() {
+        // 无基线时行为应与原始一致
+        let params = ProgressBarParams {
+            percentage: 50.0,
+            width: 10,
+            filled_char: '█',
+            empty_char: '░',
+            backup_char: '▓',
+            backup_threshold: 85.0,
+            gradient_enabled: false,
+            supports_colors: false,
+            baseline_percentage: None,
+        };
+        let bar = build_progress_bar(&params).unwrap_or_default();
+        // backup_char 不应出现（因为无基线且未超过阈值）
+        let filled_count = bar.chars().filter(|&c| c == '█').count();
+        let empty_count = bar.chars().filter(|&c| c == '░').count();
+        assert_eq!(filled_count, 5);
+        assert_eq!(empty_count, 5);
+    }
+
+    #[test]
+    fn test_three_segment_progress_bar_zero_baseline() {
+        // 基线为 0 时等同于无基线
+        let params = ProgressBarParams {
+            percentage: 50.0,
+            width: 10,
+            filled_char: '█',
+            empty_char: '░',
+            backup_char: '▓',
+            backup_threshold: 85.0,
+            gradient_enabled: false,
+            supports_colors: false,
+            baseline_percentage: Some(0.0),
+        };
+        let bar = build_progress_bar(&params).unwrap_or_default();
+        // backup_char 不应出现（基线为 0，未超过 backup 阈值）
+        let filled_count = bar.chars().filter(|&c| c == '█').count();
+        assert_eq!(filled_count, 5);
+    }
+
+    #[test]
+    fn test_three_segment_progress_bar_baseline_exceeds_used() {
+        // 基线 60% 但 used 只有 40%：全部已填充区域都是基线
+        let params = ProgressBarParams {
+            percentage: 40.0,
+            width: 10,
+            filled_char: '█',
+            empty_char: '░',
+            backup_char: '▓',
+            backup_threshold: 85.0,
+            gradient_enabled: false,
+            supports_colors: false,
+            baseline_percentage: Some(60.0),
+        };
+        let bar = build_progress_bar(&params).unwrap_or_default();
+        // 40% of 10 = 4 filled (all baseline), 6 empty
+        let baseline_count = bar.chars().filter(|&c| c == '▓').count();
+        let empty_count = bar.chars().filter(|&c| c == '░').count();
+        assert_eq!(baseline_count, 4);
+        assert_eq!(empty_count, 6);
     }
 }

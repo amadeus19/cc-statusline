@@ -144,6 +144,7 @@ impl TokensComponent {
             backup_threshold: self.config.thresholds.backup,
             gradient_enabled,
             supports_colors,
+            baseline_percentage: None,
         };
 
         progress_bar::build_progress_bar(&params)
@@ -209,13 +210,22 @@ impl TokensComponent {
         }
     }
 
-    fn format_usage(&self, info: &TokenUsageInfo) -> String {
+    fn format_usage(&self, used: u64, overhead: u64, total: u64) -> String {
         if self.config.show_raw_numbers {
-            format!("({}/{})", info.used, info.total)
+            if overhead > 0 {
+                format!("({used}(+{overhead})/{total})")
+            } else {
+                format!("({used}/{total})")
+            }
         } else {
-            let used_k = progress_bar::to_f64(info.used) / 1_000.0;
-            let total_k = progress_bar::to_f64(info.total) / 1_000.0;
-            format!("({used_k:.1}k/{total_k:.0}k)")
+            let used_k = progress_bar::to_f64(used) / 1_000.0;
+            let total_k = progress_bar::to_f64(total) / 1_000.0;
+            if overhead > 0 {
+                let overhead_k = progress_bar::to_f64(overhead) / 1_000.0;
+                format!("({used_k:.1}(+{overhead_k:.1})k/{total_k:.0}k)")
+            } else {
+                format!("({used_k:.1}k/{total_k:.0}k)")
+            }
         }
     }
 }
@@ -240,7 +250,12 @@ impl Component for TokensComponent {
         };
 
         let total = usage.total.max(1);
-        let percentage = (progress_bar::to_f64(usage.used) / progress_bar::to_f64(total)) * 100.0;
+
+        // system_overhead: 用户手动配置的系统提示词固定占用
+        let overhead = self.config.system_overhead.unwrap_or(0);
+        let effective_used = usage.used + overhead;
+        let percentage =
+            (progress_bar::to_f64(effective_used) / progress_bar::to_f64(total)) * 100.0;
         let clamped_percentage = percentage.clamp(0.0, 999.9);
 
         let mut parts = Vec::new();
@@ -253,7 +268,7 @@ impl Component for TokensComponent {
             parts.push(format!("{clamped_percentage:.1}%"));
         }
 
-        parts.push(self.format_usage(&usage));
+        parts.push(self.format_usage(usage.used, overhead, total));
 
         if let Some(status_icon) = self.select_status_icon(ctx, clamped_percentage) {
             parts.push(status_icon);

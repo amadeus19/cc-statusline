@@ -1,6 +1,6 @@
 {
   "name": "@amadeus19/cc-statusline",
-  "version": "3.2.3",
+  "version": "3.2.4",
   "description": "Claude Code Statusline Pro - Rust-powered statusline",
   "license": "MIT",
   "bin": {

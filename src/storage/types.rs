@@ -222,6 +222,9 @@ pub struct TokenHistory {
     pub last_message_uuid: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub last_timestamp: Option<String>,
+    /// 首条 assistant 消息的 `input_tokens，近似系统提示词固定占用`
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub system_baseline: Option<u64>,
 }
 
 /// Track which models have been observed during this session.

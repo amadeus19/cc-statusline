@@ -196,6 +196,7 @@ impl RateLimitComponent {
                 backup_threshold: f64::from(self.config.glm_usage.thresholds.danger),
                 gradient_enabled: true,
                 supports_colors: ctx.terminal.supports_colors(),
+                baseline_percentage: None,
             };
 
             if let Some(bar) = progress_bar::build_progress_bar(&params) {

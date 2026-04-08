@@ -339,7 +339,14 @@ impl StorageManager {
                 continue;
             }
 
-            if let Some(entry) = Self::token_entry_from_message(&value) {
+            if let Some(mut entry) = Self::token_entry_from_message(&value) {
+                // 首次 assistant 消息时记录 input_tokens 作为 system_baseline
+                let existing_baseline = latest_tokens.as_ref().and_then(|t| t.system_baseline);
+                if let Some(baseline) = existing_baseline {
+                    entry.system_baseline = Some(baseline);
+                } else {
+                    entry.system_baseline = Some(entry.input);
+                }
                 *latest_tokens = Some(entry);
             }
         }
@@ -407,6 +414,7 @@ impl StorageManager {
                 .get("timestamp")
                 .and_then(|v| v.as_str())
                 .map(std::string::ToString::to_string),
+            system_baseline: None,
         };
 
         Some(entry)

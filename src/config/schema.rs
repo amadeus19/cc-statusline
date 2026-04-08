@@ -524,6 +524,10 @@ pub struct TokensComponentConfig {
 
     #[serde(default)]
     pub context_windows: HashMap<String, u64>,
+
+    /// 系统提示词固定 Token 占用，加入百分比计算
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub system_overhead: Option<u64>,
 }
 
 impl Default for TokensComponentConfig {
@@ -549,6 +553,7 @@ impl Default for TokensComponentConfig {
             thresholds: TokensThresholdsConfig::default(),
             status_icons: TokensStatusIconsConfig::default(),
             context_windows: default_context_windows(),
+            system_overhead: None,
         }
     }
 }

@@ -23,7 +23,7 @@
 
 # 组件预设字符串 | Component preset string
 # 定义状态栏显示的组件及其顺序，每个字符对应一个组件
-# P=项目名, M=模型名, B=Git分支, T=Token使用, U=使用成本, S=状态
+# P=项目名, M=模型名, B=Git分支, T=Token使用, U=使用成本, S=状态, R=Rate Limit
 # 可以自由组合，如 "PMB" 只显示项目、模型和分支
 preset = "PMBTUS"
 
@@ -178,7 +178,7 @@ capsule_style = true
 [components]
 # 组件显示顺序 | Component display order
 # 定义组件在状态栏中的排列顺序，可以调整或删除不需要的组件
-order = ["project", "model", "branch", "tokens", "usage", "status"]
+order = ["project", "model", "branch", "tokens", "usage", "status", "rate_limit"]
 
 # -------------------- 项目组件 --------------------
 # 显示当前项目或工作区名称
@@ -348,6 +348,13 @@ critical = "[X]"
 
 # 上下文窗口大小映射 | Context window size mapping
 # 为不同模型定义上下文窗口大小（Token数）
+
+# 系统基线 Token 开销 | System overhead tokens
+# 手动指定系统提示词的固定 Token 占用，加入百分比计算
+# 设为 0 或不设置则只计算用户实际使用的 Token
+# 用法示例：system_overhead = 15000
+# system_overhead = 0
+
 [components.tokens.context_windows]
 default = 200_000                          # 默认窗口大小
 "claude-opus-4-1-20250805" = 200_000
@@ -425,6 +432,49 @@ tool = "blue"       # 工具调用状态颜色
 error = "red"       # 错误状态颜色
 warning = "yellow"  # 警告状态颜色
 
+# -------------------- Rate Limit 组件 --------------------
+# 显示 GLM API 用量配额和重置倒计时（需要配置环境变量）
+# 环境变量：ANTHROPIC_API_KEY 或 ZHIPU_API_KEY 用于 API 认证
+[components.rate_limit]
+enabled = true
+
+# GLM 用量 API 配置 | GLM usage API configuration
+[components.rate_limit.glm_usage]
+# 是否启用 API 调用 | Enable API calls for usage stats
+enabled = true
+# 缓存有效期（秒）| Cache TTL in seconds
+cache_ttl = 300
+# 请求超时（毫秒）| Request timeout in milliseconds
+timeout_ms = 5000
+# 重试次数 | Retry attempts
+retry_attempts = 2
+
+# 用量阈值配置 | Usage thresholds (百分比)
+[components.rate_limit.glm_usage.thresholds]
+warning = 80 # 警告阈值 - 显示黄色
+danger = 95  # 危险阈值 - 显示红色
+
+# Rate Limit 显示配置 | Rate limit display configuration
+[components.rate_limit.display]
+# 显示 5 小时用量进度条 | Show 5-hour usage progress bar
+show_5h_progress_bar = true
+# 显示 7 天用量进度条 | Show 7-day usage progress bar
+show_7d_progress_bar = true
+# 显示重置倒计时 | Show reset countdown
+show_countdown = true
+# 进度条宽度 | Progress bar width
+progress_width = 8
+
+# 速率图标 | Rate icons
+emoji_icon = "🪙"
+nerd_icon = "\uF51E"
+text_icon = "[R]"
+
+# 倒计时图标 | Timer icons
+timer_emoji_icon = "⏰"
+timer_nerd_icon = "\uF017"
+timer_text_icon = "⏳"
+
 # ==================== 预设映射配置 ====================
 # 定义preset字符串中每个字符对应的组件名称
 [preset_mapping]
@@ -433,7 +483,8 @@ M = "model"   # M字符对应模型组件
 B = "branch"  # B字符对应分支组件
 T = "tokens"  # T字符对应Token组件
 U = "usage"   # U字符对应Usage组件
-S = "status"  # S字符对应Status组件
+S = "status"      # S字符对应Status组件
+R = "rate_limit"  # R字符对应Rate Limit组件
 
 # ==================== 高级配置 ====================
 # 系统级高级功能配置

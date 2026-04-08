@@ -1,6 +1,6 @@
 use claude_code_statusline_pro::{
     config::Config,
-    storage::{self, ProjectResolver, StorageManager},
+    storage::{self, ProjectResolver, StorageManager, TokenHistory},
 };
 use std::fs;
 use std::io::Write;
@@ -181,6 +181,106 @@ async fn test_snapshot_updates_tokens_from_transcript() -> anyhow::Result<()> {
     assert_eq!(tokens.cache_read_input, 40);
     assert_eq!(tokens.context_used, 270);
     assert_eq!(tokens.last_message_uuid.as_deref(), Some("msg-2"));
+
+    std::env::remove_var("STATUSLINE_STORAGE_PATH");
+    reset_project_resolver();
+    drop(temp_dir);
+    Ok(())
+}
+
+// ==================== system_baseline 测试 ====================
+
+#[test]
+fn test_token_history_system_baseline_serialization() {
+    let history = TokenHistory {
+        input: 100,
+        output: 50,
+        cache_creation_input: 0,
+        cache_read_input: 0,
+        context_used: 150,
+        last_message_uuid: Some("msg-1".to_string()),
+        last_timestamp: Some("2025-01-01T00:00:00Z".to_string()),
+        system_baseline: Some(18000),
+    };
+    let json = serde_json::to_string(&history).unwrap();
+    assert!(json.contains("\"system_baseline\":18000"));
+
+    let deserialized: TokenHistory = serde_json::from_str(&json).unwrap();
+    assert_eq!(deserialized.system_baseline, Some(18000));
+}
+
+#[test]
+fn test_token_history_system_baseline_none_not_serialized() {
+    let history = TokenHistory {
+        input: 100,
+        output: 50,
+        cache_creation_input: 0,
+        cache_read_input: 0,
+        context_used: 150,
+        last_message_uuid: None,
+        last_timestamp: None,
+        system_baseline: None,
+    };
+    let json = serde_json::to_string(&history).unwrap();
+    assert!(!json.contains("system_baseline"));
+}
+
+#[test]
+fn test_token_history_backward_compatible_without_system_baseline() {
+    let json = r#"{"input":100,"output":50,"cache_creation_input":0,"cache_read_input":0,"context_used":150}"#;
+    let history: TokenHistory = serde_json::from_str(json).unwrap();
+    assert_eq!(history.input, 100);
+    assert_eq!(history.output, 50);
+    assert_eq!(history.system_baseline, None);
+}
+
+#[tokio::test]
+async fn test_system_baseline_detected_on_first_assistant_message() -> anyhow::Result<()> {
+    let _guard = storage_test_mutex().lock().await;
+    let project_id = "baseline-project";
+    let temp_dir = init_with_temp_storage(project_id).await?;
+
+    let session_id = "baseline-session";
+    let transcript_dir = temp_dir
+        .path()
+        .join("projects")
+        .join(ProjectResolver::hash_global_path(project_id));
+    fs::create_dir_all(&transcript_dir)?;
+    let transcript_path = transcript_dir.join("baseline-session.jsonl");
+
+    // 首条 assistant 消息：input_tokens 应记录为 system_baseline
+    let mut file = fs::File::create(&transcript_path)?;
+    writeln!(
+        file,
+        r#"{{"type":"assistant","uuid":"msg-1","timestamp":"2025-01-01T00:00:00Z","message":{{"usage":{{"input_tokens":18000,"output_tokens":500,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}}}}"#
+    )?;
+    file.flush()?;
+
+    let input = serde_json::json!({
+        "session_id": session_id,
+        "transcript_path": transcript_path,
+    });
+    storage::update_session_snapshot(&input).await?;
+
+    let tokens = storage::get_session_tokens(session_id)
+        .await?
+        .expect("tokens should exist");
+    assert_eq!(tokens.system_baseline, Some(18000));
+
+    // 第二条 assistant 消息：system_baseline 不应被覆盖
+    let mut file = fs::OpenOptions::new().append(true).open(&transcript_path)?;
+    writeln!(
+        file,
+        r#"{{"type":"assistant","uuid":"msg-2","timestamp":"2025-01-01T00:01:00Z","message":{{"usage":{{"input_tokens":25000,"output_tokens":1000,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}}}}"#
+    )?;
+    file.flush()?;
+
+    storage::update_session_snapshot(&input).await?;
+
+    let tokens = storage::get_session_tokens(session_id)
+        .await?
+        .expect("tokens should exist");
+    assert_eq!(tokens.system_baseline, Some(18000)); // 应保留首次检测值
 
     std::env::remove_var("STATUSLINE_STORAGE_PATH");
     reset_project_resolver();

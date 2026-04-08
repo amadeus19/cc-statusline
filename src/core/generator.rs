@@ -36,6 +36,36 @@ const CAPSULE_PALETTE: &[(&str, &str)] = &[
     ("rate_limit", "cyan"),
 ];
 
+/// 去除文本中的 ANSI 256 色前景码（`\x1b[38;5;NNm`），
+/// 保留真彩色码（`\x1b[38;2;R;G;Bm`，用于进度条渐变）和 reset 码。
+fn strip_ansi_256_fg(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    let mut remaining = text;
+
+    while let Some(pos) = remaining.find("\x1b[38;5;") {
+        // 保留 escape 序列之前的内容
+        result.push_str(&remaining[..pos]);
+        // 找到 'm' 结束符
+        let after_prefix = &remaining[pos + 7..]; // 跳过 "\x1b[38;5;"
+        if let Some(end) = after_prefix.find('m') {
+            let digits = &after_prefix[..end];
+            if digits.chars().all(|c| c.is_ascii_digit()) {
+                // 有效的 256 色码，跳过
+                remaining = &after_prefix[end + 1..];
+            } else {
+                result.push_str(&remaining[..pos + 7]);
+                remaining = &remaining[pos + 7..];
+            }
+        } else {
+            result.push_str(remaining);
+            remaining = "";
+        }
+    }
+
+    result.push_str(remaining);
+    result
+}
+
 /// Generator options
 #[derive(Debug, Clone)]
 pub struct GeneratorOptions {
@@ -308,10 +338,22 @@ impl StatuslineGenerator {
             eprintln!("[statusline] multiline render failed: {err}");
         }
 
-        // Add rate_limit as independent line (not themed)
-        for rl in &rate_limit_output {
-            if rl.visible && !rl.text.is_empty() {
-                lines.push(rl.text.clone());
+        // 将 rate_limit 通过主题渲染器包装后作为独立行
+        if !rate_limit_output.is_empty() {
+            let rl_colors = self.extract_component_colors(&rate_limit_output);
+            // 去除 rate_limit 自带的 256 色前景码，让主题的前景色（白色）生效
+            let stripped_rl: Vec<ComponentOutput> = rate_limit_output
+                .into_iter()
+                .map(|mut rl| {
+                    rl.text = strip_ansi_256_fg(&rl.text);
+                    rl
+                })
+                .collect();
+            let rl_line = self
+                .theme_renderer
+                .render(&stripped_rl, &rl_colors, &context)?;
+            if !rl_line.is_empty() {
+                lines.push(rl_line);
             }
         }
 
@@ -487,6 +529,8 @@ impl StatuslineGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::components::{ColorSupport, TerminalCapabilities};
+    use std::sync::Arc;
 
     #[test]
     fn test_parse_preset() {
@@ -521,5 +565,54 @@ mod tests {
 
         assert_eq!(generator.update_interval, Duration::from_millis(300));
         assert!(!generator.disable_cache);
+    }
+
+    #[test]
+    fn test_rate_limit_output_themed_via_render() {
+        // 验证 rate_limit 的 ComponentOutput 能通过主题渲染器正确包装
+        let rl_output = ComponentOutput::new("5h: ██████░░ 60%".to_string())
+            .with_icon("R".to_string())
+            .with_icon_color("cyan".to_string())
+            .with_text_color("cyan".to_string());
+        let components = vec![rl_output];
+        let colors = vec!["cyan".to_string()];
+
+        let config = Config::default();
+        let context = RenderContext {
+            input: Arc::new(InputData::default()),
+            config: Arc::new(config),
+            terminal: TerminalCapabilities {
+                color_support: ColorSupport::TrueColor,
+                supports_emoji: false,
+                supports_nerd_font: true,
+            },
+        };
+
+        // powerline 主题渲染
+        let powerline = create_theme_renderer("powerline");
+        let result = powerline
+            .render(&components, &colors, &context)
+            .unwrap_or_default();
+        // powerline 应包含箭头分隔符
+        assert!(result.contains('\u{e0b0}'), "powerline 应包含箭头分隔符");
+
+        // capsule 主题渲染
+        let capsule = create_theme_renderer("capsule");
+        let result = capsule
+            .render(&components, &colors, &context)
+            .unwrap_or_default();
+        // capsule 应包含左右帽符号
+        assert!(result.contains('\u{e0b6}'), "capsule 应包含左帽符号");
+        assert!(result.contains('\u{e0b4}'), "capsule 应包含右帽符号");
+
+        // classic 主题不应包含特殊符号
+        let classic = create_theme_renderer("classic");
+        let result = classic
+            .render(&components, &colors, &context)
+            .unwrap_or_default();
+        assert!(
+            !result.contains('\u{e0b0}'),
+            "classic 不应包含 powerline 符号"
+        );
     }
 }
