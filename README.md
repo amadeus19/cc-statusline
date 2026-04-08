@@ -1,9 +1,9 @@
 # Claude Code Statusline Pro
 
-[![npm version](https://badge.fury.io/js/@amadeus19/cc-statusline.svg)](https://badge.fury.io/js/@amadeus19/cc-statusline)
+[![npm version](https://badge.fury.io/js/ccsp.svg)](https://badge.fury.io/js/ccsp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/amadeus19/cc-statusline)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue.svg)](https://github.com/wangnov/ccsp)
 
 [中文](#使用指南) | [English](#user-guide)
 
@@ -83,7 +83,8 @@ npm --version
 打开Claude Code，你应该看到类似这样的状态栏：
 
 ```text
-📁 my-project | 🤖 S4 | 🌿 main | 📊 [████████████░░░] 80.1%(160k/200k) | $21.07 | ✅ Ready
+📁 cc-statusline | 🤖 glm-5.1 | 🌿 main⚡ | 📊 [███░░░░░░░░░] 26.9% (53.8k/200k) | ✅ Ready | 💰 $1.29
+🪙 5h: 1% [░░░░░░░░░░░░] ⏰ 4h12m │ 🌐 MCP: 2/1000 (30d)
 ```
 
 ### 🎯 快速配置指南
@@ -336,6 +337,25 @@ critical = 95   # 95%显示🔥临界
 force_nerd_font = false     # 强制启用Nerd Font
 force_emoji = false         # 强制启用Emoji  
 force_text = false          # 强制文本模式
+
+[components.rate_limit.display]
+# 进度条
+show_5h_progress_bar = true   # 5h 进度条
+show_7d_progress_bar = true   # 7d 进度条
+progress_width = 8            # 进度条宽度
+
+# 倒计时
+show_countdown = true         # 倒计时开关
+
+# 速率图标（5h / 7d 前缀）
+emoji_icon = "🪙"
+nerd_icon = "\uF51E"          # 󰔞
+text_icon = "[R]"
+
+# 倒计时图标
+timer_emoji_icon = "⏰"
+timer_nerd_icon = "\uF017"    #
+timer_text_icon = "⏳"
 ```
 
 ### 🖥️ 终端兼容性
