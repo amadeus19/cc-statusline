@@ -74,6 +74,7 @@ npm --version
     "command": "npx @amadeus19/cc-statusline@latest"
   }
 }
+
 ```
 
 保存文件后，重新打开Claude Code即可看到专业版状态栏！
